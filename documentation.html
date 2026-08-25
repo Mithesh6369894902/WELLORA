@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Baghewala Digital Twin Technical Documentation</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+
+    @page {
+      size: A4;
+      margin: 18mm;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      color: #0f172a;
+      line-height: 1.6;
+      background: #ffffff;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Cover Page */
+    .cover-page {
+      height: 90vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      border-bottom: 4px solid #0284c7;
+      page-break-after: always;
+      padding-top: 40px;
+    }
+
+    .cover-title {
+      font-size: 28pt;
+      font-weight: 800;
+      color: #0284c7;
+      line-height: 1.2;
+      margin-bottom: 10px;
+    }
+
+    .cover-subtitle {
+      font-size: 16pt;
+      font-weight: 600;
+      color: #475569;
+      margin-bottom: 30px;
+    }
+
+    .badge-box {
+      display: inline-block;
+      background: #e0f2fe;
+      color: #0369a1;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-weight: 700;
+      font-size: 10pt;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .cover-meta {
+      background: #f8fafc;
+      border-left: 4px solid #0284c7;
+      padding: 20px;
+      border-radius: 0 12px 12px 0;
+      margin-top: 40px;
+    }
+
+    .cover-meta table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .cover-meta td {
+      padding: 6px 0;
+      font-size: 10pt;
+    }
+
+    .cover-meta td.label {
+      font-weight: 700;
+      color: #475569;
+      width: 160px;
+    }
+
+    /* Document Sections */
+    h1 {
+      font-size: 18pt;
+      font-weight: 800;
+      color: #0f172a;
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 8px;
+      margin-top: 30px;
+      page-break-after: avoid;
+    }
+
+    h2 {
+      font-size: 14pt;
+      font-weight: 700;
+      color: #0284c7;
+      margin-top: 22px;
+      margin-bottom: 10px;
+      page-break-after: avoid;
+    }
+
+    h3 {
+      font-size: 11pt;
+      font-weight: 700;
+      color: #334155;
+      margin-top: 16px;
+      margin-bottom: 8px;
+      page-break-after: avoid;
+    }
+
+    p, li {
+      font-size: 10pt;
+      color: #334155;
+    }
+
+    code, .mono {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9pt;
+      background: #f1f5f9;
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: #0f172a;
+    }
+
+    .formula-box {
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-left: 4px solid #0284c7;
+      padding: 14px;
+      border-radius: 6px;
+      margin: 14px 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9.5pt;
+      color: #0f172a;
+    }
+
+    /* Tables */
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14px 0;
+      font-size: 9.5pt;
+    }
+
+    table.data-table th {
+      background: #0f172a;
+      color: #ffffff;
+      text-align: left;
+      padding: 8px 12px;
+      font-weight: 600;
+    }
+
+    table.data-table td {
+      padding: 8px 12px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    table.data-table tr:nth-child(even) td {
+      background: #f8fafc;
+    }
+
+    .button-badge {
+      display: inline-block;
+      background: #0284c7;
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 8.5pt;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .page-break {
+      page-break-before: always;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- COVER PAGE -->
+  <div class="cover-page">
+    <div>
+      <div className="badge-box">Industrial Heavy Oil Digital Twin Platform</div>
+      <div class="cover-title" style="margin-top: 20px;">
+        DIGITAL TWIN FOR WELL-TO-SURFACE OPTIMIZATION
+      </div>
+      <div class="cover-subtitle">
+        Cyclic Steam Stimulation (CSS) & Sucker Rod Pump (SRP) Integrated Co-Optimization for Baghewala Field
+      </div>
+      <p style="font-size: 11pt; color: #475569; max-width: 600px;">
+        Complete System Architecture, Mathematical Methodology, Technology Stack, and Detailed Feature & Button Reference Manual.
+      </p>
+    </div>
+
+    <div class="cover-meta">
+      <table>
+        <tr><td class="label">Field Location:</td><td>Baghewala Field, Rajasthan, India</td></tr>
+        <tr><td class="label">Producing Reservoir:</td><td>Jodhpur Sandstone Formation</td></tr>
+        <tr><td class="label">Crude Characterization:</td><td>17.5° API Heavy Crude (3,200 cP @ 47°C, 14.5% Asphaltene)</td></tr>
+        <tr><td class="label">Software Platform:</td><td>React 18 + TypeScript + Vite + HTML5 Canvas Engine</td></tr>
+        <tr><td class="label">Document Version:</td><td>v1.0 Final Technical & Operational Manual</td></tr>
+        <tr><td class="label">Date Generated:</td><td>August 2026</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- SECTION 1: EXECUTIVE SUMMARY & BACKGROUND -->
+  <h1>1. Executive Summary & Field Background</h1>
+
+  <h2>1.1 Reservoir Context (Baghewala Field, Rajasthan)</h2>
+  <p>
+    The Baghewala Field in Rajasthan produces heavy crude oil (17.5° API) from the Jodhpur Sandstone formation at a setting depth of approximately 1,100 meters. The reservoir presents extreme operational challenges:
+  </p>
+  <ul>
+    <li><strong>Ultra-High Crude Viscosity:</strong> 3,200 cP at natural reservoir temperature (47°C).</li>
+    <li><strong>High Asphaltene Content:</strong> 14.5% asphaltene, causing precipitation risks and high viscous friction drag.</li>
+    <li><strong>Low Primary Energy:</strong> Low reservoir temperature (46–48°C) and low reservoir pressure (35 bar).</li>
+    <li><strong>Poor Primary Mobility:</strong> Requires thermal Enhanced Oil Recovery (EOR) via Cyclic Steam Stimulation (CSS) combined with Sucker Rod Pumping (SRP) artificial lift.</li>
+  </ul>
+
+  <h2>1.2 The Operational Problem: Unintegrated Optimization</h2>
+  <p>
+    Currently, CSS thermal injection cycles and SRP operational pumping speeds are optimized separately based on historical experience. As the reservoir cools following steam injection:
+  </p>
+  <ol>
+    <li>Crude viscosity increases exponentially back toward baseline (3,200 cP).</li>
+    <li>Viscous drag on the downstroke increases dramatically, overriding natural rod string gravity (<span class="mono">Viscous Drag &gt; Net Buoyant Weight</span>).</li>
+    <li>This results in <strong>Rod Floating</strong>, polished rod slack, rod string buckling, tubing wear, fluid pound, high Steam-Oil Ratio (SOR), excessive electrical power consumption, and frequent pump failures.</li>
+  </ol>
+
+  <h2>1.3 The Solution: Integrated Digital Twin</h2>
+  <p>
+    This software platform delivers an industrial physics-informed AI Digital Twin that continuously models and co-optimizes both CSS thermal injection cycles and SRP artificial lift speed profiles in real time, eliminating rod floating, reducing SOR, and maximizing net economic margin ($ NPV).
+  </p>
+
+  <!-- SECTION 2: FRAMEWORKS & TOOLS STACK -->
+  <div class="page-break"></div>
+  <h1>2. Software Frameworks, Tools & Libraries Used</h1>
+
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Layer / Component</th>
+        <th>Technology / Tool</th>
+        <th>Version</th>
+        <th>Implementation Role & Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Frontend Framework</strong></td>
+        <td>React</td>
+        <td>v18.3.1</td>
+        <td>Component-based UI framework for state management and interactive views.</td>
+      </tr>
+      <tr>
+        <td><strong>Programming Language</strong></td>
+        <td>TypeScript</td>
+        <td>v5.5.3</td>
+        <td>Strictly typed codebase preventing runtime null checks and type mismatches.</td>
+      </tr>
+      <tr>
+        <td><strong>Build Tool & Dev Server</strong></td>
+        <td>Vite</td>
+        <td>v8.2.2</td>
+        <td>Lightning-fast bundler delivering sub-second HMR and production builds.</td>
+      </tr>
+      <tr>
+        <td><strong>Graphics & Physics Engine</strong></td>
+        <td>HTML5 2D Canvas API</td>
+        <td>Standard</td>
+        <td>Sub-pixel 60 FPS animation engine rendering beam kinematics, downhole valves, and thermal heat plume.</td>
+      </tr>
+      <tr>
+        <td><strong>Design System</strong></td>
+        <td>Vanilla CSS3 + Glassmorphism</td>
+        <td>CSS3</td>
+        <td>Custom dark mode design tokens with background blur effects and neon indicators.</td>
+      </tr>
+      <tr>
+        <td><strong>Icon Suite</strong></td>
+        <td>Lucide-React</td>
+        <td>v0.344.0</td>
+        <td>High-clarity vector icons for navigation, indicators, and alerts.</td>
+      </tr>
+      <tr>
+        <td><strong>Typography</strong></td>
+        <td>Google Fonts (Outfit & JetBrains Mono)</td>
+        <td>Web Fonts</td>
+        <td>Clean sans-serif headings and monospace numerical telemetry formatting.</td>
+      </tr>
+      <tr>
+        <td><strong>Data Engine</strong></td>
+        <td>CSV & HTML5 Blob API</td>
+        <td>Standard</td>
+        <td>In-app CSV dataset previewer, data parser, and instant 1-click dataset exporter.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- SECTION 3: MATHEMATICAL METHODOLOGY -->
+  <h1>3. Mathematical Methodology & Physical Equations</h1>
+
+  <h2>3.1 Andrade Temperature-Viscosity Correlation</h2>
+  <div class="formula-box">
+    &mu;(T) = &mu;<sub>ref</sub> &middot; exp[ B &middot; ( 1 / (T + 273.15) - 1 / (T<sub>ref</sub> + 273.15) ) ]
+    <br><br>
+    Where:
+    <br>- &mu;<sub>ref</sub> = 3,200 cP at T<sub>ref</sub> = 47°C (Ambient Baghewala Reservoir)
+    <br>- B = 4,650 K (Activation energy coefficient for Jodhpur crude)
+    <br>- At peak steam temperature (295°C), viscosity drops to 18 cP.
+  </div>
+
+  <h2>3.2 Thermal Reservoir Heat Decay Model T(t)</h2>
+  <div class="formula-box">
+    T(t) = T<sub>res</sub> + (T<sub>peak</sub> - T<sub>res</sub>) &middot; exp[ - (&lambda; / &radic;(V<sub>steam</sub> / 2000)) &middot; t ]
+    <br><br>
+    Where:
+    <br>- T<sub>res</sub> = 47°C, T<sub>peak</sub> = 295°C - (Soak Days &times; 3.5)
+    <br>- &lambda; = 0.045 day<sup>-1</sup> (Thermal conductivity decay constant)
+  </div>
+
+  <h2>3.3 SRP Polished Rod Loads & Rod Floating Criterion</h2>
+  <div class="formula-box">
+    W<sub>rod,net</sub> = W<sub>rod,air</sub> &middot; (1 - &rho;<sub>fluid</sub> / &rho;<sub>steel</sub>)
+    <br>
+    Upstroke Load: F<sub>up</sub> = W<sub>rod,net</sub> + F<sub>fluid</sub> + F<sub>accel</sub> + F<sub>viscous,up</sub>
+    <br>
+    Downstroke Load: F<sub>down</sub> = W<sub>rod,net</sub> - F<sub>accel</sub> - F<sub>viscous,down</sub>
+    <br><br>
+    <strong>Rod Floating Condition:</strong>
+    <br>When Viscous Drag F<sub>viscous,down</sub> &prop; &mu;(T) &middot; v<sub>down</sub> exceeds net buoyant gravity W<sub>rod,net</sub>, downstroke tension drops to 0 lbs, causing rod floating, slack line, and severe buckling.
+  </div>
+
+  <!-- SECTION 4: DETAILED FEATURE & BUTTON MANUAL -->
+  <div class="page-break"></div>
+  <h1>4. Detailed Feature & Button Reference Manual</h1>
+
+  <h2>4.1 Global Navigation Header & Simulation Bar</h2>
+  <ul>
+    <li>
+      <span class="button-badge">3D Digital Twin</span>: Switches to the interactive wellbore schematic and animated SRP walking beam view.
+    </li>
+    <li>
+      <span class="button-badge">Dynamometer &amp; SRP</span>: Switches to real-time Load vs Position Dynamometer card plots and AI anomaly classification.
+    </li>
+    <li>
+      <span class="button-badge">CSS Thermal Optimizer</span>: Switches to steam volume injection controls, soak period tuning, and thermal decay curves.
+    </li>
+    <li>
+      <span class="button-badge">What-If Lab</span>: Switches to parametric scenario simulation comparing Historical Practice vs Digital Twin Strategy.
+    </li>
+    <li>
+      <span class="button-badge">Economic ROI</span>: Switches to financial daily margins, OPEX breakdown, and executive report downloader.
+    </li>
+    <li>
+      <span class="button-badge">Data Center</span>: Switches to empirical dataset previews and 1-click CSV file downloaders.
+    </li>
+    <li>
+      <span class="button-badge">LIVE TICK / PAUSE</span>: Toggles automatic 2.5-second time step advancement across the 60-day cycle trajectory.
+    </li>
+    <li>
+      <span class="button-badge">Reset (RotateCcw)</span>: Instantly resets simulation day back to Day 1.
+    </li>
+    <li>
+      <span class="button-badge">Auto-Mitigate (Set 3.8 SPM)</span>: Appears in the critical alert banner during rod floating to immediately reduce SPM speed to a safe operating rate.
+    </li>
+  </ul>
+
+  <h2>4.2 Module 1: 3D Digital Twin Visualizer</h2>
+  <p>
+    Renders sub-pixel animated surface pumping unit kinematics, sucker rod string motion, polished rod stress, downhole valve action (traveling & standing valves), and reservoir steam chamber plume expansion/cooling. Includes HUD floating badges for Bottom Hole Temp (°C), Crude Viscosity (cP), Peak/Min Loads (lbs), and SPM.
+  </p>
+
+  <h2>4.3 Module 2: Dynamometer Card & AI Classifier</h2>
+  <p>
+    Displays Surface Load (lbs) vs Position (inches) alongside Downhole Pump Card. Features test pattern selector buttons (<span class="mono">AUTO</span>, <span class="mono">NORMAL</span>, <span class="mono">ROD_FLOATING</span>, <span class="mono">FLUID_POUND</span>) and AI neural network anomaly classification with confidence scoring.
+  </p>
+
+  <h2>4.4 Module 3: CSS Thermal Optimizer</h2>
+  <p>
+    Provides sliders for Steam Volume (1,000–4,500 m³), Soak Period (1–12 Days), and Production Cut-off Threshold (2.0–8.0 m³/d). Features an <span class="button-badge">Apply AI Recommendation</span> button to apply Pareto-optimal parameters.
+  </p>
+
+  <h2>4.5 Module 4: SRP Speed Tuner & Reliability Monitor</h2>
+  <p>
+    Features an <span class="button-badge">Enable Auto-Tuner</span> toggle button for dynamic viscosity-driven speed regulation, SPM slider, stroke length slider, plunger size slider, downstroke tension margin meter, and cycle day SPM schedule table.
+  </p>
+
+  <h2>4.6 Module 5: What-If Scenario Sandbox</h2>
+  <p>
+    Interactive laboratory comparing Scenario A (Historical Practice) vs Scenario B (Digital Twin Strategy) with live side-by-side performance matrix for Oil Yield, SOR, Fuel Expenses, and Net Margin.
+  </p>
+
+  <h2>4.7 Module 6: Economic ROI Dashboard</h2>
+  <p>
+    Tracks Net Daily Margin ($/day), SOR ($m^3/m^3$), Specific Energy Cost ($/bbl), and features an <span class="button-badge">Export Executive Report (JSON)</span> button for generating official executive reports.
+  </p>
+
+  <h2>4.8 Module 7: Data Center & Datasets</h2>
+  <p>
+    Houses all four empirical datasets used in the digital twin:
+  </p>
+  <ol>
+    <li><span class="mono">Baghewala_Reservoir_Core_Data.csv</span></li>
+    <li><span class="mono">CSS_Thermal_Cycle_Telemetry.csv</span></li>
+    <li><span class="mono">SRP_Dynamometer_Card_Time_Series.csv</span></li>
+    <li><span class="mono">Andrade_Viscosity_Temperature_Curve.csv</span></li>
+  </ol>
+  <p>
+    Includes individual <span class="button-badge">Download CSV</span> buttons and a <span class="button-badge">Download All Datasets (CSV Bundle)</span> button.
+  </p>
+
+</body>
+</html>
