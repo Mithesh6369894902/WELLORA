@@ -1,4 +1,4 @@
-# ⚡ WELLORA — Heavy Crude Digital Twin & Dual-Physics AI System
+#  WELLORA — Heavy Crude Digital Twin & Dual-Physics AI System
 
 <div align="center">
 
@@ -17,7 +17,7 @@
 
 ---
 
-## 📌 Executive Summary
+##  Executive Summary
 
 **WELLORA** is an integrated, physics-informed digital twin application engineered for ultra-heavy crude oil fields characterized by high initial fluid viscosity (3,200 cP at 47°C) and severe operational anomalies such as **Rod Floating** and **Viscous Drag**.
 
@@ -25,7 +25,7 @@ By coupling **Andrade thermodynamic viscosity models**, **downhole thermal decay
 
 ---
 
-## 🏗️ System Architecture
+##  System Architecture
 
 ```mermaid
 flowchart TB
@@ -40,7 +40,7 @@ flowchart TB
         AICopilot["WELLORA AI Copilot Chatbot"]
     end
 
-    subgraph Physics_Engine["⚡ Dual-Physics & Mathematical Engine (physicsEngine.ts)"]
+    subgraph Physics_Engine[" Dual-Physics & Mathematical Engine (physicsEngine.ts)"]
         Andrade["Andrade Viscosity Model\nμ(T) = μ_ref * exp(B * (1/T - 1/T_ref))"]
         ThermalDecay["Bottom-Hole Temp Decay\nT(t) = T_res + (T_peak - T_res) * exp(-k*t)"]
         RodDrag["Mechanical Rod Drag & Tension\nF_drag ∝ μ^0.65 * v_rod"]
@@ -48,13 +48,13 @@ flowchart TB
         ParetoSolver["Integrated Pareto Solver\n(SOR vs Net Cash Margin)"]
     end
 
-    subgraph Storage_Layer["💾 Persistence & Data Infrastructure"]
+    subgraph Storage_Layer[" Persistence & Data Infrastructure"]
         LocalStorage["LocalStorage Auto-Persistence\n(Schema v1 Sync)"]
         ServiceWorker["PWA Service Worker Cache\n(sw.js + Manifest)"]
         Datasets["Empirical CSV Datasets\n(/datasets/*.csv)"]
     end
 
-    subgraph Native_Mobile["📱 Native Mobile Wrapper (Capacitor 7)"]
+    subgraph Native_Mobile[" Native Mobile Wrapper (Capacitor 7)"]
         CapacitorAndroid["Capacitor Android Container\n(com.wellora.digitaltwin)"]
         APK["Android Package\n(app-debug.apk)"]
     end
@@ -70,28 +70,28 @@ flowchart TB
 
 ---
 
-## 🚀 Key Features & Core Modules
+##  Key Features & Core Modules
 
-### 1. 🖥️ 3D Digital Twin Visualizer
+### 1.  3D Digital Twin Visualizer
 * **Surface Pumping Unit**: Animated 3D walking beam pumping unit operating in real-time sync with SPM settings.
 * **Underground Thermal Chamber**: Visual temperature gradient mapping the steam core downhole ($295^\circ\text{C}$) to ambient rock ($47^\circ\text{C}$).
 * **Live Telemetry Gauges**: Real-time readouts for Bottom-Hole Temp, Viscosity, Oil Rate ($\text{m}^3/\text{day}$), and Polished Rod Load ($\text{lbs}$).
 
-### 2. 📈 Real-Time Dynamometer Card Diagnostics
+### 2.  Real-Time Dynamometer Card Diagnostics
 * **Load vs Displacement Graphs**: High-frequency surface and downhole load loops.
 * **Anomaly Recognition**: Automated detection of **Normal**, **Rod Floating**, **Fluid Pound**, **Gas Interference**, and **Tubing Leakage**.
 * **SRP Hardware Tuner**: Interactive adjustment of Pump Speed ($\text{SPM}$), Stroke Length ($\text{inches}$), Plunger Diameter ($\text{inches}$), and Depth ($\text{meters}$).
 
-### 3. 🔥 CSS Thermal Optimizer
+### 3.  CSS Thermal Optimizer
 * **60-Day Thermal Decay Curve**: Models bottom-hole temperature cooling and corresponding Andrade crude viscosity reduction.
 * **Steam Volume & Pressure Tuning**: Simulates injection volume ($1,500 - 4,500\text{ m}^3\text{ CWE}$) and soak time ($2 - 10\text{ days}$).
 * **Pareto Frontier**: Identifies optimal operational trade-offs for Steam-Oil Ratio (SOR) vs Net Cash Margin.
 
-### 4. 🧪 What-If Scenario Laboratory
+### 4.  What-If Scenario Laboratory
 * **Side-by-Side Comparison**: Contrast historical practice (Scenario A) vs WELLORA AI Integrated Strategy (Scenario B).
 * **Multi-Parameter Sliders**: Instant re-calculation of 60-day Cumulative Oil ($\text{m}^3$), Steam-Oil Ratio ($\text{m}^3/\text{m}^3$), Boiler Fuel Costs ($\$$), and Net Strategy Margin ($\$$).
 
-### 5. 💰 Economic ROI Dashboard
+### 5.  Economic ROI Dashboard
 * **Cash Flow Tracking**: Gross Revenue ($\$72/\text{bbl}$ crude baseline) vs Power Expenses ($\text{kWh}$) and Steam Fuel Expenses ($\$14.50/\text{m}^3$).
 * **Specific Energy Cost**: Tracks operating cost per produced barrel ($\$/\text{bbl}$).
 
@@ -102,14 +102,14 @@ flowchart TB
   3. `SRP_Dynamometer_Card_Time_Series.csv` — High-frequency load-displacement points.
   4. `Andrade_Viscosity_Temperature_Curve.csv` — Thermodynamic calibration matrix.
 
-### 7. 🤖 WELLORA AI Copilot (Gemini-Style Chatbot)
+### 7.  WELLORA AI Copilot (Gemini-Style Chatbot)
 * **Descriptive Plain-English AI**: Answers engineering queries, defines petroleum terms (**SPM**, **BHT**, **SOR**, **CSS**, **SRP**, **API Gravity**), and guides users through app tools.
 * **On-the-Fly Custom Scenario Math**: Type custom numbers (*"What if SPM is 4.5 and steam volume is 2400?"*) for instant physics calculations.
 * **Context-Aware Alert Banner**: Includes a **Red Alert Banner** with an **Auto-Mitigate (Set 3.8 SPM)** button when rod floating risk exceeds thresholds.
 
 ---
 
-## 🧮 Physics & Mathematical Models
+##  Physics & Mathematical Models
 
 ### 1. Andrade Crude Viscosity Model
 Heavy crude oil viscosity ($\mu$) is calculated as an empirical exponential function of Kelvin temperature ($T$):
@@ -125,7 +125,7 @@ Where rod velocity $v_{\text{rod}} = \frac{2 \cdot S \cdot \text{SPM}}{60 \cdot 
 
 ---
 
-## 🛠️ Technology Stack & Frameworks
+##  Technology Stack & Frameworks
 
 | Layer | Technology / Framework | Function |
 | :--- | :--- | :--- |
@@ -181,7 +181,7 @@ SIH26120/
 
 ---
 
-## 💻 Getting Started & Installation
+##  Getting Started & Installation
 
 ### Prerequisites
 * **Node.js**: v18.0 or higher
@@ -205,7 +205,7 @@ Open `http://localhost:5173` in your browser.
 
 ---
 
-## 📱 Mobile Application & Android APK
+##  Mobile Application & Android APK
 
 The project is pre-configured with **Capacitor 7** to run natively on Android smartphones and tablets.
 
@@ -232,7 +232,7 @@ cd android
 
 ---
 
-## 🔄 Windows System Auto-Start Setup
+##  Windows System Auto-Start Setup
 
 To make the WELLORA background server launch automatically whenever your Windows PC boots up:
 
@@ -242,8 +242,8 @@ To make the WELLORA background server launch automatically whenever your Windows
 
 ---
 
-## 📜 License & Acknowledgements
+##  License & Acknowledgements
 
 Developed for Heavy Crude Reservoir Optimization. Powered by React, Vite, Capacitor, and Lucide Icons.
 
-*Designed with ❤️ for Field Engineers & Energy Innovation.*
+*Designed with  for Field Engineers & Energy Innovation.*
