@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import type { DynamometerCardData, RealTimeTelemetry, SRPParameters } from '../types';
 import { generateDynamometerCard } from '../services/physicsEngine';
-import { Activity, Cpu } from 'lucide-react';
+import { Activity, AlertTriangle } from 'lucide-react';
 
 interface DynamometerProps {
   telemetry: RealTimeTelemetry;
@@ -10,7 +10,9 @@ interface DynamometerProps {
 
 export const DynamometerCardView: React.FC<DynamometerProps> = ({ telemetry, srp }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [selectedAnomaly, setSelectedAnomaly] = useState<'AUTO' | 'ROD_FLOATING' | 'FLUID_POUND' | 'NORMAL'>('AUTO');
+  const [selectedAnomaly, setSelectedAnomaly] = useState<'AUTO' | 'ROD_FLOATING' | 'FLUID_POUND' | 'NORMAL' | 'GAS_INTERFERENCE' | 'LEAKAGE'>('AUTO');
+  const [showDownholeCard, setShowDownholeCard] = useState<boolean>(true);
+  const [showGhostCard, setShowGhostCard] = useState<boolean>(true);
 
   const cardData: DynamometerCardData = generateDynamometerCard(
     telemetry.viscosity,
@@ -29,46 +31,104 @@ export const DynamometerCardView: React.FC<DynamometerProps> = ({ telemetry, srp
 
     ctx.clearRect(0, 0, width, height);
 
-    // Grid lines
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+    // Dark grid background
+    ctx.fillStyle = '#050608';
+    ctx.fillRect(0, 0, width, height);
+
+    // Reticle Grid
+    ctx.strokeStyle = 'rgba(255, 122, 0, 0.08)';
     ctx.lineWidth = 1;
-    for (let x = 50; x < width - 20; x += 40) {
+    const padL = 60;
+    const padR = 30;
+    const padT = 30;
+    const padB = 50;
+
+    const plotW = width - padL - padR;
+    const plotH = height - padT - padB;
+
+    // Grid lines
+    for (let x = 0; x <= 10; x++) {
+      const gx = padL + (x * plotW) / 10;
       ctx.beginPath();
-      ctx.moveTo(x, 20);
-      ctx.lineTo(x, height - 40);
+      ctx.moveTo(gx, padT);
+      ctx.lineTo(gx, padT + plotH);
       ctx.stroke();
     }
-    for (let y = 20; y < height - 40; y += 40) {
+    for (let y = 0; y <= 8; y++) {
+      const gy = padT + (y * plotH) / 8;
       ctx.beginPath();
-      ctx.moveTo(50, y);
-      ctx.lineTo(width - 20, y);
+      ctx.moveTo(padL, gy);
+      ctx.lineTo(padL + plotW, gy);
       ctx.stroke();
     }
 
     // Axes
-    ctx.strokeStyle = '#475569';
+    ctx.strokeStyle = '#374151';
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(50, 20);
-    ctx.lineTo(50, height - 40);
-    ctx.lineTo(width - 20, height - 40);
+    ctx.moveTo(padL, padT);
+    ctx.lineTo(padL, padT + plotH);
+    ctx.lineTo(padL + plotW, padT + plotH);
     ctx.stroke();
 
     // Axis Labels
-    ctx.fillStyle = '#94a3b8';
-    ctx.font = '11px Outfit, sans-serif';
-    ctx.fillText('0 in', 45, height - 20);
-    ctx.fillText(`${srp.strokeLength} in`, width - 50, height - 20);
-    ctx.fillText('Position (inches)', (width - 50) / 2, height - 10);
+    ctx.fillStyle = '#9ca3af';
+    ctx.font = '11px "JetBrains Mono", monospace';
+    ctx.fillText('0"', padL - 8, padT + plotH + 20);
+    ctx.fillText(`${srp.strokeLength}"`, padL + plotW - 15, padT + plotH + 20);
+    ctx.fillText('POLISHED ROD POSITION (INCHES)', padL + plotW / 2 - 100, padT + plotH + 35);
 
-    ctx.fillText('12,000 lbs', 5, 30);
-    ctx.fillText('0 lbs', 15, height - 40);
+    // Y Axis (Loads: 0 to 14,000 lbs)
+    const maxScaleLoad = 14000;
+    for (let i = 0; i <= 7; i++) {
+      const val = (i * 2000);
+      const ly = padT + plotH - (val / maxScaleLoad) * plotH;
+      ctx.fillText(`${val}`, 8, ly + 4);
+    }
+    ctx.save();
+    ctx.translate(16, padT + plotH / 2 + 50);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText('POLISHED ROD LOAD (LBS)', 0, 0);
+    ctx.restore();
 
-    // Map function for position -> X and load -> Y
-    const mapX = (posInches: number) => 50 + (posInches / srp.strokeLength) * (width - 70);
-    const mapY = (loadLbs: number) => height - 40 - (loadLbs / 12000) * (height - 60);
+    // Map functions
+    const mapX = (posInches: number) => padL + (posInches / srp.strokeLength) * plotW;
+    const mapY = (loadLbs: number) => padT + plotH - (loadLbs / maxScaleLoad) * plotH;
 
-    // Render Surface Dynamometer Card Loop
+    // 1. Ghost / Reference Ideal Card (Normal 100% Fillage)
+    if (showGhostCard) {
+      const idealCard = generateDynamometerCard(25, srp, 'NORMAL');
+      if (idealCard.surfacePoints.length > 0) {
+        ctx.beginPath();
+        ctx.moveTo(mapX(idealCard.surfacePoints[0].position), mapY(idealCard.surfacePoints[0].surfaceLoad));
+        for (let i = 1; i < idealCard.surfacePoints.length; i++) {
+          ctx.lineTo(mapX(idealCard.surfacePoints[i].position), mapY(idealCard.surfacePoints[i].surfaceLoad));
+        }
+        ctx.closePath();
+        ctx.strokeStyle = 'rgba(156, 163, 175, 0.25)';
+        ctx.setLineDash([3, 3]);
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+    }
+
+    // 2. Downhole Pump Card Loop (inner shape)
+    if (showDownholeCard && cardData.downholePoints.length > 0) {
+      ctx.beginPath();
+      ctx.moveTo(mapX(cardData.downholePoints[0].position), mapY(cardData.downholePoints[0].downholeLoad));
+      for (let i = 1; i < cardData.downholePoints.length; i++) {
+        ctx.lineTo(mapX(cardData.downholePoints[i].position), mapY(cardData.downholePoints[i].downholeLoad));
+      }
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(0, 255, 136, 0.08)';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(0, 255, 136, 0.85)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    // 3. Render Surface Dynamometer Card Loop
     if (cardData.surfacePoints.length > 0) {
       ctx.beginPath();
       ctx.moveTo(mapX(cardData.surfacePoints[0].position), mapY(cardData.surfacePoints[0].surfaceLoad));
@@ -78,167 +138,246 @@ export const DynamometerCardView: React.FC<DynamometerProps> = ({ telemetry, srp
       }
       ctx.closePath();
 
-      // Card stroke color based on anomaly
-      let strokeColor = '#38bdf8'; // Cyan
-      let fillColor = 'rgba(56, 189, 248, 0.1)';
+      // Card color based on anomaly
+      let strokeColor = '#ff7a00'; // Cyber Orange
+      let fillColor = 'rgba(255, 122, 0, 0.15)';
       if (cardData.anomalyType === 'ROD_FLOATING') {
-        strokeColor = '#f43f5e'; // Rose
-        fillColor = 'rgba(244, 63, 94, 0.15)';
+        strokeColor = '#ff2d55'; // Crimson
+        fillColor = 'rgba(255, 45, 85, 0.15)';
       } else if (cardData.anomalyType === 'FLUID_POUND') {
-        strokeColor = '#f59e0b'; // Amber
-        fillColor = 'rgba(245, 158, 11, 0.15)';
+        strokeColor = '#ffb800'; // Amber
+        fillColor = 'rgba(255, 184, 0, 0.15)';
       }
 
+      ctx.shadowColor = strokeColor;
+      ctx.shadowBlur = 12;
       ctx.fillStyle = fillColor;
       ctx.fill();
       ctx.strokeStyle = strokeColor;
       ctx.lineWidth = 3;
       ctx.stroke();
+      ctx.shadowBlur = 0;
     }
 
-    // Render Downhole Pump Card Loop (inner shape)
-    if (cardData.downholePoints.length > 0) {
-      ctx.beginPath();
-      ctx.moveTo(mapX(cardData.downholePoints[0].position), mapY(cardData.downholePoints[0].downholeLoad));
+    // 4. Real-Time Laser Tracing Point on Surface Card!
+    const livePos = telemetry.instantaneousRodPosition;
+    const liveLoad = telemetry.instantaneousRodLoad;
+    const laserX = mapX(livePos);
+    const laserY = mapY(liveLoad);
 
-      for (let i = 1; i < cardData.downholePoints.length; i++) {
-        ctx.lineTo(mapX(cardData.downholePoints[i].position), mapY(cardData.downholePoints[i].downholeLoad));
-      }
-      ctx.closePath();
-      ctx.strokeStyle = 'rgba(16, 185, 129, 0.8)';
-      ctx.setLineDash([4, 4]);
-      ctx.lineWidth = 2;
-      ctx.stroke();
-      ctx.setLineDash([]);
-    }
-  }, [cardData, srp]);
+    // Laser crosshairs
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+    ctx.setLineDash([2, 2]);
+    ctx.beginPath();
+    ctx.moveTo(laserX, padT);
+    ctx.lineTo(laserX, padT + plotH);
+    ctx.moveTo(padL, laserY);
+    ctx.lineTo(padL + plotW, laserY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Glowing Laser Dot
+    ctx.shadowColor = '#ffffff';
+    ctx.shadowBlur = 15;
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(laserX, laserY, 6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Laser pulse outer ring
+    ctx.strokeStyle = telemetry.rodFloatingDetected ? '#ff2d55' : '#00f0ff';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(laserX, laserY, 11, 0, Math.PI * 2);
+    ctx.stroke();
+  }, [cardData, srp, telemetry, showDownholeCard, showGhostCard]);
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: '20px' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: '20px' }}>
       {/* Canvas Plot Column */}
-      <div className="glass-panel" style={{ padding: '20px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+      <div className="glass-panel" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
           <div>
-            <h2 style={{ fontSize: '1.1rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Activity size={18} color="var(--primary-cyan)" />
-              Real-Time Polished Rod Dynamometer Card Plot
-            </h2>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Activity size={20} color="var(--primary-cyan)" />
+              <h2 style={{ fontSize: '1.15rem', fontWeight: 800 }}>Real-Time Dynamometer Card Diagnostics</h2>
+              <span className="badge badge-cyan font-mono" style={{ fontSize: '0.7rem' }}>
+                LIVE TRACING
+              </span>
+            </div>
             <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-              Surface Load vs. Position (Solid) & Downhole Pump Card (Dashed Green)
+              Continuous Load vs Displacement wave telemetry synchronized with pump stroke position
             </p>
           </div>
 
-          {/* Test Pattern Selector */}
-          <div style={{ display: 'flex', gap: '6px', background: 'rgba(15, 23, 42, 0.6)', padding: '4px', borderRadius: '8px', border: '1px solid var(--border-subtle)' }}>
-            {(['AUTO', 'NORMAL', 'ROD_FLOATING', 'FLUID_POUND'] as const).map((mode) => (
-              <button
-                key={mode}
-                onClick={() => setSelectedAnomaly(mode)}
-                style={{
-                  fontSize: '0.75rem',
-                  fontWeight: 600,
-                  padding: '4px 10px',
-                  borderRadius: '6px',
-                  border: 'none',
-                  cursor: 'pointer',
-                  background: selectedAnomaly === mode ? 'var(--primary-cyan)' : 'transparent',
-                  color: selectedAnomaly === mode ? '#090d16' : 'var(--text-muted)',
-                }}
-              >
-                {mode}
-              </button>
-            ))}
+          {/* Overlays toggle */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button
+              onClick={() => setShowDownholeCard(!showDownholeCard)}
+              className={`tab-btn-mini ${showDownholeCard ? 'active-emerald' : ''}`}
+            >
+              Downhole Pump Card
+            </button>
+            <button
+              onClick={() => setShowGhostCard(!showGhostCard)}
+              className={`tab-btn-mini ${showGhostCard ? 'active-cyan' : ''}`}
+            >
+              Ghost Reference
+            </button>
           </div>
         </div>
 
-        <div style={{ position: 'relative', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--border-subtle)' }}>
+        {/* Dynamometer Canvas */}
+        <div style={{ position: 'relative', borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(0, 240, 255, 0.25)' }}>
           <canvas
             ref={canvasRef}
-            width={680}
-            height={440}
-            style={{ width: '100%', height: '440px', background: '#090d16', display: 'block' }}
+            width={720}
+            height={460}
+            style={{ width: '100%', height: '460px', display: 'block', background: '#060a12' }}
           />
+
+          {/* Canvas Live HUD overlay */}
+          <div
+            style={{
+              position: 'absolute',
+              top: '12px',
+              right: '12px',
+              background: 'rgba(7, 11, 18, 0.85)',
+              backdropFilter: 'blur(8px)',
+              padding: '10px 14px',
+              borderRadius: '10px',
+              border: '1px solid var(--border-subtle)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '4px',
+            }}
+          >
+            <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 600 }}>LIVE LASER TRACKER</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span className="font-mono glow-text-cyan" style={{ fontSize: '0.95rem', fontWeight: 700 }}>
+                {telemetry.instantaneousRodPosition}" @ {telemetry.instantaneousRodLoad.toLocaleString()} lbs
+              </span>
+            </div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+              Speed: <strong style={{ color: '#fff' }}>{telemetry.spm} SPM</strong> | Stroke: <strong style={{ color: '#fff' }}>{srp.strokeLength}"</strong>
+            </div>
+          </div>
+        </div>
+
+        {/* Anomaly Pattern Simulation Selectors */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>CARD SCENARIO:</span>
+          {(['AUTO', 'ROD_FLOATING', 'FLUID_POUND', 'NORMAL', 'GAS_INTERFERENCE', 'LEAKAGE'] as const).map((type) => (
+            <button
+              key={type}
+              onClick={() => setSelectedAnomaly(type)}
+              className={`tab-btn-mini ${selectedAnomaly === type ? 'active-cyan' : ''}`}
+              style={{ fontSize: '0.7rem' }}
+            >
+              {type.replace('_', ' ')}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* AI Anomaly Classifier & Diagnostics Column */}
+      {/* Diagnostics & AI Anomaly Recognition Column */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        {/* Classification Result Card */}
-        <div className="glass-panel" style={{ padding: '20px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-            <Cpu size={22} color="var(--primary-cyan)" />
-            <div>
-              <h3 style={{ fontSize: '0.95rem', fontWeight: 700 }}>AI Dynamometer Classifier</h3>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Convolutional Neural Network Diagnostic Engine</span>
-            </div>
+        {/* Classification Card */}
+        <div
+          className="glass-panel"
+          style={{
+            padding: '20px',
+            borderColor: cardData.anomalyType === 'ROD_FLOATING' ? 'rgba(255, 45, 85, 0.5)' : 'rgba(0, 255, 136, 0.3)',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)' }}>AI CLASSIFICATION</span>
+            <span
+              className={`badge ${
+                cardData.anomalyType === 'ROD_FLOATING'
+                  ? 'badge-rose'
+                  : cardData.anomalyType === 'FLUID_POUND'
+                  ? 'badge-amber'
+                  : 'badge-emerald'
+              }`}
+            >
+              {cardData.confidence}% MATCH
+            </span>
           </div>
 
-          <div
-            style={{
-              padding: '16px',
-              borderRadius: '12px',
-              background:
-                cardData.anomalyType === 'ROD_FLOATING'
-                  ? 'rgba(244, 63, 94, 0.15)'
-                  : cardData.anomalyType === 'FLUID_POUND'
-                  ? 'rgba(245, 158, 11, 0.15)'
-                  : 'rgba(16, 185, 129, 0.15)',
-              border: `1px solid ${
-                cardData.anomalyType === 'ROD_FLOATING'
-                  ? 'rgba(244, 63, 94, 0.4)'
-                  : cardData.anomalyType === 'FLUID_POUND'
-                  ? 'rgba(245, 158, 11, 0.4)'
-                  : 'rgba(16, 185, 129, 0.4)'
-              }`,
-              marginBottom: '16px',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)' }}>PATTERNS DETECTED</span>
-              <span className="font-mono" style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary-cyan)' }}>
-                {cardData.confidence}% Confidence
-              </span>
-            </div>
-            <div style={{ fontSize: '1.25rem', fontWeight: 800, letterSpacing: '-0.01em', marginBottom: '6px' }}>
-              {cardData.anomalyType.replace('_', ' ')}
-            </div>
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-main)', lineHeight: '1.4' }}>
-              {cardData.cardDescription}
-            </p>
+          <div style={{ fontSize: '1.35rem', fontWeight: 800, marginBottom: '6px' }} className={cardData.anomalyType === 'ROD_FLOATING' ? 'glow-text-rose' : 'glow-text-emerald'}>
+            {cardData.anomalyType.replace('_', ' ')}
+          </div>
+          <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: '1.4' }}>
+            {cardData.cardDescription}
+          </p>
+        </div>
+
+        {/* Load Summary Matrix */}
+        <div className="glass-panel" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <h3 style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+            Polished Rod Mechanical Loads
+          </h3>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '8px', borderBottom: '1px solid var(--border-subtle)' }}>
+            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Peak Polished Rod Load (PPRL)</span>
+            <span className="font-mono glow-text-cyan" style={{ fontSize: '0.95rem', fontWeight: 700 }}>
+              {telemetry.polishedRodPeakLoad.toLocaleString()} lbs
+            </span>
           </div>
 
-          {/* Diagnostic Action Recommendation */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <h4 style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-              Automated Mitigation Plan
-            </h4>
+          <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '8px', borderBottom: '1px solid var(--border-subtle)' }}>
+            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Min Polished Rod Load (MPRL)</span>
+            <span
+              className="font-mono"
+              style={{
+                fontSize: '0.95rem',
+                fontWeight: 700,
+                color: telemetry.polishedRodMinLoad < 1000 ? 'var(--accent-rose)' : 'var(--text-main)',
+              }}
+            >
+              {telemetry.polishedRodMinLoad.toLocaleString()} lbs
+            </span>
+          </div>
 
-            {cardData.anomalyType === 'ROD_FLOATING' && (
-              <div style={{ background: 'rgba(15, 23, 42, 0.6)', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-subtle)', fontSize: '0.8rem' }}>
-                <strong style={{ color: 'var(--accent-rose)', display: 'block', marginBottom: '4px' }}>
-                  Action 1: Reduce SRP Speed
-                </strong>
-                Lower SPM from {srp.spm} to {(srp.spm - 2.0).toFixed(1)} SPM to match fluid downstroke descent rate.
-              </div>
-            )}
+          <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '8px', borderBottom: '1px solid var(--border-subtle)' }}>
+            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Effective Pump Fillage</span>
+            <span className="font-mono glow-text-emerald" style={{ fontSize: '0.95rem', fontWeight: 700 }}>
+              {telemetry.pumpFillagePercent}%
+            </span>
+          </div>
 
-            {cardData.anomalyType === 'FLUID_POUND' && (
-              <div style={{ background: 'rgba(15, 23, 42, 0.6)', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-subtle)', fontSize: '0.8rem' }}>
-                <strong style={{ color: 'var(--accent-amber)', display: 'block', marginBottom: '4px' }}>
-                  Action 1: Adjust Pump Fillage
-                </strong>
-                Reduce pumping rate to allow fluid level rebuild in wellbore.
-              </div>
-            )}
-
-            <div style={{ background: 'rgba(15, 23, 42, 0.6)', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-subtle)', fontSize: '0.8rem' }}>
-              <strong style={{ color: 'var(--primary-cyan)', display: 'block', marginBottom: '4px' }}>
-                Action 2: Thermal Schedule
-              </strong>
-              Trigger dynamic hot water flush or evaluate next CSS injection cycle.
-            </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Motor Electrical Draw</span>
+            <span className="font-mono glow-text-amber" style={{ fontSize: '0.95rem', fontWeight: 700 }}>
+              {telemetry.motorPowerKw} kW
+            </span>
           </div>
         </div>
+
+        {/* Quick Mitigation Action */}
+        {cardData.anomalyType === 'ROD_FLOATING' && (
+          <div
+            className="glass-panel"
+            style={{
+              padding: '16px',
+              background: 'rgba(255, 45, 85, 0.1)',
+              borderColor: 'rgba(255, 45, 85, 0.4)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '10px',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--accent-rose)' }}>
+              <AlertTriangle size={18} />
+              <strong style={{ fontSize: '0.85rem' }}>Automated Mitigation Recommendation</strong>
+            </div>
+            <p style={{ fontSize: '0.75rem', color: 'var(--text-main)' }}>
+              Reduce VFD speed setpoint from {telemetry.spm} SPM to <strong>3.8 SPM</strong> to restore downstroke rod string tension above 1,500 lbs.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

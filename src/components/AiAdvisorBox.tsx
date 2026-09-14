@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Bot, Send, X, Sparkles, Trash2, Zap, AlertTriangle } from 'lucide-react';
+import { Bot, Send, X, Trash2, Zap, ArrowRight } from 'lucide-react';
 import type { RealTimeTelemetry, CSSParameters, SRPParameters, ReservoirParameters } from '../types';
 import { generateAiAdvice, loadSavedChatHistory, saveChatHistory, type ChatMessage } from '../services/aiAdvisorService';
+import { scadaAudio } from '../services/realtimeStreamEngine';
 
 interface AiAdvisorBoxProps {
   isOpen: boolean;
@@ -11,6 +12,8 @@ interface AiAdvisorBoxProps {
   srp: SRPParameters;
   res: ReservoirParameters;
   onAutoMitigateRodFloating?: () => void;
+  onSetSpm?: (spm: number) => void;
+  onSwitchTab?: (tab: string) => void;
 }
 
 export const AiAdvisorBox: React.FC<AiAdvisorBoxProps> = ({
@@ -20,7 +23,8 @@ export const AiAdvisorBox: React.FC<AiAdvisorBoxProps> = ({
   css,
   srp,
   res,
-  onAutoMitigateRodFloating,
+  onSetSpm,
+  onSwitchTab,
 }) => {
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
     const saved = loadSavedChatHistory();
@@ -29,7 +33,7 @@ export const AiAdvisorBox: React.FC<AiAdvisorBoxProps> = ({
       {
         id: 'welcome_1',
         sender: 'ai',
-        text: `👋 **Welcome to the Baghewala AI Assistant!**\n\nI am your friendly AI guide for this oilfield digital twin project. You can ask me anything about the well, explore application features, or define terms in simple, everyday language!\n\nHere are some popular questions you can ask:\n- 🧪 *"How does the What-If Lab work?"*\n- ⚡ *"How do I fix Rod Floating?"*\n- ⏱️ *"What is SPM or BHT?"*\n- 💰 *"How do we increase daily profit?"*\n\nClick a suggestion below or type any question!`,
+        text: `⚡ **WELLORA SCADA AI Co-Pilot Ready**\n\nI am connected to the real-time IoT sensor telemetry stream for Baghewala Well #BW-07.\n\nYou can ask for downhole diagnostics, command setpoint adjustments, analyze steam soak economics, or click any prompt below.`,
         timestamp: Date.now(),
         category: 'GENERAL',
       },
@@ -71,17 +75,30 @@ export const AiAdvisorBox: React.FC<AiAdvisorBoxProps> = ({
       text: aiAdvice.response,
       timestamp: Date.now() + 1,
       category: aiAdvice.category,
+      actionButton: aiAdvice.actionButton,
     };
 
     setMessages((prev) => [...prev, userMsg, aiMsg]);
     if (!textToSend) setInputQuery('');
   };
 
+  const handleExecuteAction = (actionButton: ChatMessage['actionButton']) => {
+    if (!actionButton) return;
+    scadaAudio.playActionConfirm();
+    if (actionButton.actionType === 'SET_SPM' && onSetSpm) {
+      onSetSpm(Number(actionButton.payload));
+      onClose();
+    } else if (actionButton.actionType === 'SWITCH_TAB' && onSwitchTab) {
+      onSwitchTab(String(actionButton.payload));
+      onClose();
+    }
+  };
+
   const handleClearHistory = () => {
     const defaultMsg: ChatMessage = {
       id: `welcome_${Date.now()}`,
       sender: 'ai',
-      text: `Chat history cleared. How can I assist your engineering calculations today?`,
+      text: `Chat history cleared. SCADA AI Co-Pilot listening for commands.`,
       timestamp: Date.now(),
       category: 'GENERAL',
     };
@@ -89,15 +106,11 @@ export const AiAdvisorBox: React.FC<AiAdvisorBoxProps> = ({
   };
 
   const suggestionChips = [
-    { label: '👋 Hello & Help', query: 'Hi, what can you do?' },
-    { label: '🧪 How to use What-If Lab?', query: 'How to use What-If Lab?' },
-    { label: '⏱️ What is SPM?', query: 'What is SPM?' },
-    { label: '🌡️ What is BHT?', query: 'What is BHT?' },
-    { label: '🔥 What is SOR?', query: 'What is SOR?' },
-    { label: '🛢️ What is API Gravity?', query: 'What is API gravity?' },
-    { label: '⚡ Fix Rod Floating', query: 'How do I fix Rod Floating?' },
-    { label: '📊 How to download CSV Datasets?', query: 'How to download CSV datasets?' },
-    { label: '⚙️ Custom Scenario Math', query: 'What if SPM is 4.2 and steam volume is 2400?' },
+    { label: '🚨 Diagnose Rod Floating', query: 'Why is rod floating happening and how do we fix it?' },
+    { label: '📊 Waveform Oscilloscope', query: 'Explain the real-time waveform oscilloscope' },
+    { label: '🔥 Optimize CSS Steam', query: 'What is the optimal steam volume for this cycle?' },
+    { label: '💰 Check Daily Profit Margin', query: 'What is our current daily net cash profit?' },
+    { label: '📈 Dynamometer Laser Tracing', query: 'How does the live dynamometer card work?' },
   ];
 
   return (
@@ -108,8 +121,8 @@ export const AiAdvisorBox: React.FC<AiAdvisorBoxProps> = ({
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: 'rgba(15, 23, 42, 0.75)',
-        backdropFilter: 'blur(6px)',
+        backgroundColor: 'rgba(6, 10, 18, 0.85)',
+        backdropFilter: 'blur(8px)',
         zIndex: 9999,
         display: 'flex',
         alignItems: 'center',
@@ -122,15 +135,15 @@ export const AiAdvisorBox: React.FC<AiAdvisorBoxProps> = ({
         className="glass-panel"
         style={{
           width: '100%',
-          maxWidth: '750px',
-          maxHeight: '88vh',
-          height: '680px',
+          maxWidth: '780px',
+          maxHeight: '90vh',
+          height: '700px',
           display: 'flex',
           flexDirection: 'column',
           borderRadius: '16px',
           overflow: 'hidden',
-          borderColor: 'rgba(56, 189, 248, 0.4)',
-          boxShadow: '0 20px 50px rgba(0, 0, 0, 0.6)',
+          borderColor: 'rgba(255, 122, 0, 0.45)',
+          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.85)',
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -138,7 +151,7 @@ export const AiAdvisorBox: React.FC<AiAdvisorBoxProps> = ({
         <div
           style={{
             padding: '16px 20px',
-            background: 'linear-gradient(135deg, rgba(2, 132, 199, 0.25) 0%, rgba(15, 23, 42, 0.8) 100%)',
+            background: 'linear-gradient(135deg, rgba(255, 122, 0, 0.25) 0%, rgba(5, 6, 8, 0.95) 100%)',
             borderBottom: '1px solid var(--border-subtle)',
             display: 'flex',
             alignItems: 'center',
@@ -148,24 +161,25 @@ export const AiAdvisorBox: React.FC<AiAdvisorBoxProps> = ({
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div
               style={{
-                background: 'linear-gradient(135deg, #0284c7 0%, #38bdf8 100%)',
+                background: 'linear-gradient(135deg, #ff7a00 0%, #ff5500 100%)',
                 padding: '8px',
                 borderRadius: '10px',
                 display: 'flex',
-                boxShadow: '0 0 12px rgba(56, 189, 248, 0.5)',
+                alignItems: 'center',
+                justifyContent: 'center',
               }}
             >
-              <Bot size={22} color="#fff" />
+              <Bot size={22} color="#050608" />
             </div>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <h2 style={{ fontSize: '1.1rem', fontWeight: 800 }}>WELLORA AI Copilot</h2>
-                <span className="badge badge-cyan" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <Sparkles size={10} /> Real-Time Advisor
+                <h3 style={{ fontSize: '1.05rem', fontWeight: 800 }}>WELLORA AI Co-Pilot</h3>
+                <span className="badge badge-cyan font-mono" style={{ fontSize: '0.65rem' }}>
+                  SCADA CORE
                 </span>
               </div>
               <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                Field Intelligence • Jodhpur Sandstone Heavy Crude (17.5° API)
+                Baghewala Heavy Crude Digital Twin • Real-Time Decision & Dispatch Governor
               </p>
             </div>
           </div>
@@ -174,195 +188,162 @@ export const AiAdvisorBox: React.FC<AiAdvisorBoxProps> = ({
             <button
               onClick={handleClearHistory}
               className="btn-secondary"
+              title="Clear Chat History"
               style={{ padding: '6px 10px', fontSize: '0.75rem' }}
-              title="Clear chat history"
             >
-              <Trash2 size={14} /> Clear
+              <Trash2 size={14} />
             </button>
             <button
               onClick={onClose}
               className="btn-secondary"
-              style={{ padding: '6px 10px' }}
+              style={{ padding: '6px 10px', fontSize: '0.75rem' }}
             >
-              <X size={18} />
+              <X size={16} />
             </button>
           </div>
         </div>
 
-        {/* Live Well Status Telemetry Strip */}
+        {/* Suggestion Chips */}
         <div
           style={{
-            padding: '10px 20px',
-            background: telemetry.rodFloatingDetected ? 'rgba(244, 63, 94, 0.15)' : 'rgba(15, 23, 42, 0.6)',
+            padding: '10px 16px',
+            background: 'rgba(5, 6, 8, 0.7)',
             borderBottom: '1px solid var(--border-subtle)',
             display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            fontSize: '0.75rem',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
-            <div>
-              <span style={{ color: 'var(--text-muted)' }}>BHT: </span>
-              <strong className="font-mono glow-text-cyan">{telemetry.bottomHoleTemp}°C</strong>
-            </div>
-            <div>
-              <span style={{ color: 'var(--text-muted)' }}>Viscosity: </span>
-              <strong className="font-mono glow-text-amber">{telemetry.viscosity} cP</strong>
-            </div>
-            <div>
-              <span style={{ color: 'var(--text-muted)' }}>SPM: </span>
-              <strong className="font-mono">{telemetry.spm} SPM</strong>
-            </div>
-            <div>
-              <span style={{ color: 'var(--text-muted)' }}>Rod Risk: </span>
-              <strong className={`font-mono ${telemetry.rodFloatingDetected ? 'glow-text-rose' : 'glow-text-emerald'}`}>
-                {telemetry.rodFloatingRiskScore}%
-              </strong>
-            </div>
-          </div>
-
-          {telemetry.rodFloatingDetected && onAutoMitigateRodFloating && (
-            <button
-              onClick={onAutoMitigateRodFloating}
-              className="btn-primary"
-              style={{
-                background: 'linear-gradient(135deg, #f43f5e 0%, #e11d48 100%)',
-                padding: '4px 10px',
-                fontSize: '0.7rem',
-                gap: '4px',
-              }}
-            >
-              <AlertTriangle size={12} /> Auto-Mitigate (Set 3.8 SPM)
-            </button>
-          )}
-        </div>
-
-        {/* Messages Scroll Area */}
-        <div
-          style={{
-            flex: 1,
-            padding: '20px',
-            overflowY: 'auto',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '16px',
-          }}
-        >
-          {messages.map((msg) => (
-            <div
-              key={msg.id}
-              style={{
-                display: 'flex',
-                justifyContent: msg.sender === 'user' ? 'flex-end' : 'flex-start',
-              }}
-            >
-              <div
-                style={{
-                  maxWidth: '85%',
-                  padding: '12px 16px',
-                  borderRadius: msg.sender === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
-                  background:
-                    msg.sender === 'user'
-                      ? 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)'
-                      : 'rgba(30, 41, 59, 0.85)',
-                  border: msg.sender === 'user' ? 'none' : '1px solid var(--border-subtle)',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-                }}
-              >
-                {msg.sender === 'ai' && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px', fontSize: '0.7rem', color: 'var(--primary-cyan)', fontWeight: 700 }}>
-                    <Zap size={12} /> AI ADVISOR RESPONSE
-                  </div>
-                )}
-
-                <div
-                  style={{
-                    fontSize: '0.85rem',
-                    lineHeight: '1.5',
-                    whiteSpace: 'pre-wrap',
-                    color: msg.sender === 'user' ? '#ffffff' : 'var(--text-main)',
-                  }}
-                >
-                  {msg.text}
-                </div>
-              </div>
-            </div>
-          ))}
-          <div ref={messagesEndRef} />
-        </div>
-
-        {/* Quick Suggestion Chips */}
-        <div
-          style={{
-            padding: '8px 16px',
-            background: 'rgba(15, 23, 42, 0.5)',
-            borderTop: '1px solid var(--border-subtle)',
-            display: 'flex',
-            alignItems: 'center',
             gap: '8px',
             overflowX: 'auto',
+            whiteSpace: 'nowrap',
           }}
         >
-          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', fontWeight: 600 }}>Ideas:</span>
           {suggestionChips.map((chip, idx) => (
             <button
               key={idx}
               onClick={() => handleSendMessage(chip.query)}
-              className="btn-secondary"
-              style={{
-                padding: '4px 10px',
-                fontSize: '0.75rem',
-                borderRadius: '20px',
-                whiteSpace: 'nowrap',
-                background: 'rgba(56, 189, 248, 0.1)',
-                borderColor: 'rgba(56, 189, 248, 0.2)',
-                color: 'var(--primary-cyan)',
-              }}
+              className="tab-btn-mini"
+              style={{ fontSize: '0.75rem', padding: '5px 10px' }}
             >
               {chip.label}
             </button>
           ))}
         </div>
 
-        {/* Query Input Bar */}
-        <div
+        {/* Messages Scroll Area */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {messages.map((msg) => {
+            const isAi = msg.sender === 'ai';
+            return (
+              <div
+                key={msg.id}
+                style={{
+                  display: 'flex',
+                  justifyContent: isAi ? 'flex-start' : 'flex-end',
+                  gap: '10px',
+                }}
+              >
+                {isAi && (
+                  <div
+                    style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '8px',
+                      background: 'rgba(255, 122, 0, 0.15)',
+                      border: '1px solid rgba(255, 122, 0, 0.4)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <Bot size={18} color="var(--primary-orange)" />
+                  </div>
+                )}
+
+                <div
+                  style={{
+                    maxWidth: '82%',
+                    background: isAi ? 'rgba(14, 16, 20, 0.9)' : 'linear-gradient(135deg, #ff7a00 0%, #e65100 100%)',
+                    border: `1px solid ${isAi ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 122, 0, 0.5)'}`,
+                    borderRadius: '12px',
+                    padding: '14px 16px',
+                    color: isAi ? '#fff' : '#050608',
+                    fontWeight: isAi ? 400 : 700,
+                    fontSize: '0.85rem',
+                    lineHeight: '1.5',
+                  }}
+                >
+                  <div style={{ whiteSpace: 'pre-line' }}>{msg.text}</div>
+
+                  {/* Optional Action Dispatch Button */}
+                  {msg.actionButton && (
+                    <div style={{ marginTop: '12px', paddingTop: '10px', borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                      <button
+                        onClick={() => handleExecuteAction(msg.actionButton)}
+                        className="btn-primary"
+                        style={{
+                          width: '100%',
+                          padding: '8px 14px',
+                          fontSize: '0.8rem',
+                          background: 'linear-gradient(135deg, #ff7a00 0%, #ffa133 100%)',
+                          color: '#050608',
+                          fontWeight: 800,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '8px',
+                        }}
+                      >
+                        <Zap size={14} />
+                        <span>{msg.actionButton.label}</span>
+                        <ArrowRight size={14} />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Input Bar */}
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSendMessage();
+          }}
           style={{
             padding: '14px 20px',
-            background: 'rgba(15, 23, 42, 0.9)',
+            background: 'rgba(6, 10, 18, 0.95)',
             borderTop: '1px solid var(--border-subtle)',
             display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
+            gap: '10px',
           }}
         >
           <input
             type="text"
+            placeholder="Type a SCADA diagnostic query or setpoint command..."
             value={inputQuery}
             onChange={(e) => setInputQuery(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') handleSendMessage();
-            }}
-            placeholder="Ask AI for advice, ideas, solutions, or calculations..."
             style={{
               flex: 1,
-              padding: '10px 14px',
+              background: 'rgba(15, 23, 42, 0.8)',
+              border: '1px solid rgba(0, 240, 255, 0.3)',
               borderRadius: '10px',
-              border: '1px solid var(--border-subtle)',
-              background: 'rgba(30, 41, 59, 0.8)',
-              color: '#ffffff',
+              padding: '10px 16px',
+              color: '#fff',
               fontSize: '0.85rem',
               outline: 'none',
             }}
           />
           <button
-            onClick={() => handleSendMessage()}
+            type="submit"
             className="btn-primary"
-            style={{ padding: '10px 18px', gap: '6px', fontSize: '0.85rem' }}
+            style={{ padding: '10px 18px', display: 'flex', alignItems: 'center', gap: '6px' }}
           >
-            <Send size={16} /> Send
+            <Send size={16} />
+            <span>Send</span>
           </button>
-        </div>
+        </form>
       </div>
     </div>
   );

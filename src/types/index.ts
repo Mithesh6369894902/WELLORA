@@ -1,4 +1,4 @@
-// Data types for Baghewala Field CSS + SRP Digital Twin
+// Data types for Baghewala Field CSS + SRP Real-Time SCADA Digital Twin
 
 export type CSSPhase = 'INJECTION' | 'SOAK' | 'PRODUCTION' | 'IDLE';
 
@@ -29,8 +29,22 @@ export interface SRPParameters {
   pumpDepth: number; // meters (e.g., 1050 m)
 }
 
+export interface WellProfile {
+  id: string;
+  name: string;
+  padLocation: string;
+  coordinates: string;
+  status: 'PRODUCING' | 'INJECTING' | 'SOAKING' | 'ALERT' | 'STANDBY';
+  healthScore: number; // 0-100%
+  res: ReservoirParameters;
+  css: CSSParameters;
+  srp: SRPParameters;
+  simDay: number;
+}
+
 export interface RealTimeTelemetry {
-  timestamp: number; // unix time
+  timestamp: number; // unix time ms
+  isoTime: string;
   cycleDays: number; // current day in CSS cycle
   phase: CSSPhase;
   bottomHoleTemp: number; // °C
@@ -41,14 +55,42 @@ export interface RealTimeTelemetry {
   waterCut: number; // %
   steamInjectionRate: number; // m3/day (0 when producing)
   spm: number; // SRP strokes per minute
+  
+  // High-frequency mechanical & electrical parameters
+  instantaneousRodPosition: number; // inches (0 to strokeLength)
+  instantaneousRodLoad: number; // lbs
   polishedRodPeakLoad: number; // lbs
   polishedRodMinLoad: number; // lbs
+  motorPowerKw: number; // kW electrical draw
+  motorCurrentAmps: number; // Amps
+  casingPressureBar: number; // bar
+  tubingHeadPressureBar: number; // bar
+  downholePressureBar: number; // bar
+  acousticFluidLevelMeters: number; // meters from surface
+  vibrationRmsMmSec: number; // mm/s structural vibration
+  
+  // SCADA Diagnostic scores
   rodFloatingRiskScore: number; // 0 - 100%
   rodFloatingDetected: boolean;
   pumpFillagePercent: number; // %
   steamOilRatio: number; // m3 steam / m3 oil
   specificEnergyCost: number; // $/bbl oil
   netDailyMargin: number; // $ / day
+  
+  // Real-time communication telemetry
+  samplingRateMs: number; // 100, 250, 500, 1000, 2000 ms
+  packetsReceived: number;
+  commLatencyMs: number;
+  mqttStatus: 'CONNECTED' | 'RECONNECTING' | 'OFFLINE';
+}
+
+export interface OscilloscopeFrame {
+  timeMs: number;
+  rodLoadLbs: number;
+  motorCurrentAmps: number;
+  downholePressureBar: number;
+  vibrationRms: number;
+  fluidLevelM: number;
 }
 
 export interface DynamometerPoint {
@@ -77,11 +119,17 @@ export interface OptimizationResult {
   paybackDays: number;
 }
 
-export interface AlertMessage {
+export interface ScadaAlarm {
   id: string;
+  wellId: string;
   timestamp: string;
+  timeMs: number;
   severity: 'CRITICAL' | 'WARNING' | 'INFO';
+  code: string;
   title: string;
   description: string;
-  actionRequired: string;
+  recommendedAction: string;
+  mitigationSpm?: number;
+  mitigationSteam?: number;
+  acknowledged: boolean;
 }
